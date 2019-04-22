@@ -155,11 +155,11 @@ void RSLogger::init_recording_(const ParamConfig &config){
 
 void render_slider(rect location, std::vector<rs2::sensor>& sensors, ParamConfig& config)
 {
-  ImGui::SetNextWindowPos({ location.x, location.y });
-  ImGui::SetNextWindowSize({ location.w, location.h });
+//  ImGui::SetNextWindowPos({ location.x, location.y });
+//  ImGui::SetNextWindowSize({ location.w, location.h });
 
   // Render transparency slider:
-  ImGui::Begin("Display", nullptr, flags);
+  ImGui::Begin("Display", nullptr);
   ImGui::PushItemWidth(-1);
   ImGui::SliderFloat("##Slider", &(config.alpha), 0.f, 1.f);
   ImGui::PopItemWidth();
