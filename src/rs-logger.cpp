@@ -317,9 +317,74 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
   }
 }
 
-//
-//RSLogger::RSLogger(const ParamConfig& config) {
-//}
+void record_intrinsics_(const rs2::stream_profile& stream) {
+  // A sensor's stream (rs2::stream_profile) is in general a stream of data with no specific type.
+  // For video streams (streams of images), the sensor that produces the data has a lens and thus has properties such
+  //  as a focal point, distortion, and principal point.
+  // To get these intrinsics parameters, we need to take a stream and first check if it is a video stream
+  if (auto video_stream = stream.as<rs2::video_stream_profile>())
+  {
+    try
+    {
+      //If the stream is indeed a video stream, we can now simply call get_intrinsics()
+      rs2_intrinsics intrinsics = video_stream.get_intrinsics();
+
+      auto resolution = std::make_pair(intrinsics.width, intrinsics.height);
+      auto principal_point = std::make_pair(intrinsics.ppx, intrinsics.ppy);
+      auto focal_length = std::make_pair(intrinsics.fx, intrinsics.fy);
+      rs2_distortion model = intrinsics.model;
+
+      std::cout << "Camera Resolution       : " << resolution.first << ", " << resolution.second << std::endl;
+      std::cout << "Principal Point         : " << principal_point.first << ", " << principal_point.second << std::endl;
+      std::cout << "Focal Length            : " << focal_length.first << ", " << focal_length.second << std::endl;
+      std::cout << "Distortion Model        : " << model << std::endl;
+      std::cout << "Distortion Coefficients : [" << intrinsics.coeffs[0] << "," << intrinsics.coeffs[1] << "," <<
+                intrinsics.coeffs[2] << "," << intrinsics.coeffs[3] << "," << intrinsics.coeffs[4] << "]" << std::endl;
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr << "Failed to get intrinsics for the given stream. " << e.what() << std::endl;
+    }
+  }
+  else if (auto motion_stream = stream.as<rs2::motion_stream_profile>())
+  {
+    try
+    {
+      //If the stream is indeed a motion stream, we can now simply call get_motion_intrinsics()
+      rs2_motion_device_intrinsic intrinsics = motion_stream.get_motion_intrinsics();
+
+      std::cout << " Scale X      cross axis      cross axis  Bias X \n";
+      std::cout << " cross axis    Scale Y        cross axis  Bias Y  \n";
+      std::cout << " cross axis    cross axis     Scale Z     Bias Z  \n";
+      for (int i = 0; i < 3; i++)
+      {
+        for (int j = 0; j < 4; j++)
+        {
+          std::cout << intrinsics.data[i][j] << "    ";
+        }
+        std::cout << "\n";
+      }
+
+      std::cout << "Variance of noise for X, Y, Z axis \n";
+      for (int i = 0; i < 3; i++)
+        std::cout << intrinsics.noise_variances[i] << " ";
+      std::cout << "\n";
+
+      std::cout << "Variance of bias for X, Y, Z axis \n";
+      for (int i = 0; i < 3; i++)
+        std::cout << intrinsics.bias_variances[i] << " ";
+      std::cout << "\n";
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr << "Failed to get intrinsics for the given stream. " << e.what() << std::endl;
+    }
+  }
+  else
+  {
+    std::cerr << "Given stream profile has no intrinsics data" << std::endl;
+  }
+}
 
 
 RSLogger::RSLogger() = default;
@@ -352,7 +417,8 @@ int main(int argc, char * argv[]) try
   config.cfg.enable_stream(RS2_STREAM_DEPTH, config.width, config.height);
   config.cfg.enable_stream(RS2_STREAM_COLOR, config.width, config.height);
   auto rs_profile = pipe_ptr->start(config.cfg);
-
+  auto const steam = pipe_ptr->get_active_profile().get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
+  record_intrinsics_(steam);
   // Initialize a shared pointer to a device with the current device on the pipeline
   auto curr_device = rs_profile.get_device();
 
