@@ -197,7 +197,7 @@ void render_slider(rect location, std::vector<rs2::sensor>& sensors, ParamConfig
   if (!config.is_rgb_auto_exposure_on){
     if (rgb_sensor.supports(RS2_OPTION_EXPOSURE)){
       auto exposure_range = rgb_sensor.get_option_range(RS2_OPTION_EXPOSURE);
-      ImGui::SliderFloat("RGB exposure time", &(config.exposure_time), exposure_range.min, exposure_range.max/10);
+      ImGui::SliderFloat("RGB exposure time", &(config.exposure_time), 10, 280);
       rgb_sensor.set_option(RS2_OPTION_EXPOSURE, config.exposure_time);
     }
     if (rgb_sensor.supports(RS2_OPTION_GAIN)){
