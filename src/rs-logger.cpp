@@ -9,6 +9,8 @@
 #include <cstdlib>  // mkdir
 #include <chrono> //control time
 #include <ctime>
+#include <fstream>
+
 /*
  This example introduces the concept of spatial stream alignment.
  For example usecase of alignment, please check out align-advanced and measure demos.
@@ -262,6 +264,7 @@ void RSLogger::start(const ParamConfig& config) {
   if (!this->recording){
     this->init_recording_(config);
     std::cout<<"initialize folders"<<std::endl;
+    this->record_intrinsics_();
   }
   //if resume: currently recording should be true -> no special thing needs to be done
   this->recording = true;
@@ -315,6 +318,24 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, depth_info.c_str());
     }
   }
+}
+
+void RSLogger::record_intrinsics_() {
+  std::ofstream camera_info;
+  std::string info = this->logFolder_ + "camera.info";
+  camera_info.open(info.c_str());
+  std::cerr << "[INFO] Logging intrinsics Information to : " << info << std::endl;
+
+  camera_info << "#Image Res.(w,h):" <<std::endl;
+  camera_info << this->resX << " " << this->resY <<std::endl;
+  camera_info << "#focus lens     :" <<std::endl;
+  camera_info << this->fx << " " << this->fy <<std::endl;
+  camera_info << "#principal pt   :" <<std::endl;
+  camera_info << this->cx << " " << this->cy <<std::endl;
+  camera_info << "#Undist. coeff. :" <<std::endl;
+  camera_info << this->d0 << " " << this->d1 << " " << this->d2 << " " << this->d3 << " " << this->d4 << std::endl;
+
+  camera_info.close();
 }
 
 void RSLogger::get_intrinsics(const rs2::stream_profile &stream) {

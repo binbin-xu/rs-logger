@@ -53,6 +53,7 @@ class RSLogger{
   void init_recording_(const ParamConfig &config);
   void record_depth_(const rs2::depth_frame& depth);
   void record_rgb_(const rs2::video_frame& rgb_frame);
+  void record_intrinsics_();
 //  void record(rect location, std::shared_ptr<rs2::pipeline> pipe_ptr, rs2::device& curr_device, ParamConfig& config);
 };
 
