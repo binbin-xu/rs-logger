@@ -264,7 +264,8 @@ void RSLogger::start(const ParamConfig& config) {
   if (!this->recording){
     this->init_recording_(config);
     std::cout<<"initialize folders"<<std::endl;
-    this->record_intrinsics_();
+    if (config.output_sequences)
+      this->record_intrinsics_();
   }
   //if resume: currently recording should be true -> no special thing needs to be done
   this->recording = true;
