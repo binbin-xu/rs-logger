@@ -23,6 +23,7 @@ class RSLogger{
   std::string rgb_seq;
   std::string depth_seq;
   void record_frames(const rs2::frameset& frameset);
+  void record_raw_(const rs2::frameset& frameset);
 
   //imgui caller
   void start(const ParamConfig& config);
@@ -50,10 +51,13 @@ class RSLogger{
   std::string rgbFolder_;
   std::string depthFolder_;
 
+  std::string raw_filename;
+
   void init_recording_(const ParamConfig &config);
   void record_depth_(const rs2::depth_frame& depth);
   void record_rgb_(const rs2::video_frame& rgb_frame);
   void record_intrinsics_();
+
 //  void record(rect location, std::shared_ptr<rs2::pipeline> pipe_ptr, rs2::device& curr_device, ParamConfig& config);
 };
 

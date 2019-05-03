@@ -10,7 +10,7 @@
 #include <chrono> //control time
 #include <ctime>
 #include <fstream>
-
+#include "raw.h"
 /*
  This example introduces the concept of spatial stream alignment.
  For example usecase of alignment, please check out align-advanced and measure demos.
@@ -153,6 +153,9 @@ void RSLogger::init_recording_(const ParamConfig &config){
   }
 
   this->curr_frame_num_= 0;
+  if (config.output_raw){
+    this->raw_filename = this->logFolder_ + curr_time + ".raw";
+  }
 }
 
 void render_slider(rect location, std::vector<rs2::sensor>& sensors, ParamConfig& config)
@@ -215,6 +218,41 @@ void render_slider(rect location, std::vector<rs2::sensor>& sensors, ParamConfig
   }
 
   ImGui::End();
+}
+
+void RSLogger::record_raw_(const rs2::frameset &frameset) {
+  // With the aligned frameset we proceed as usual
+  auto depth = frameset.get_depth_frame();
+  auto color = frameset.get_color_frame();
+
+  // Query frame size (width and height)
+  const int w = color.as<rs2::video_frame>().get_width();
+  const int h = color.as<rs2::video_frame>().get_height();
+  Raw::uint2 inputSize = Raw::make_uint2(w, h);
+
+  cv::Mat colorImage(cv::Size(w, h), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
+  cv::Mat depthImage(cv::Size(w, h), CV_16UC1, (void*)depth.get_data(), cv::Mat::AUTO_STEP);
+
+//  buffer
+  Raw::uchar3 * rgbRaw = (Raw::uchar3*) malloc(sizeof(Raw::uchar3) * w * h);
+  ushort * depthRaw = (ushort*) malloc(sizeof(ushort) * w * h);
+
+  Raw::imageToUchar3(colorImage, rgbRaw);
+//  TODO: check if the distance is represented in z-distance or eucliadn distance
+  Raw::depthToUshort(depthImage, depthRaw, this->cx, this->cy, this->fx, this->fy, "z");
+
+  FILE* pFile = fopen(this->raw_filename.c_str(), "ab");
+
+  // recording to binraw
+  fwrite(&(inputSize), sizeof(inputSize), 1, pFile);
+  fwrite(depthRaw, sizeof(uint16_t), w * h, pFile);
+  fwrite(&(inputSize), sizeof(inputSize), 1, pFile);
+  fwrite(rgbRaw, sizeof(Raw::uchar3), w * h, pFile);
+
+  free(rgbRaw);
+  free(depthRaw);
+
+  fclose(pFile);
 }
 
 void RSLogger::record_frames(const rs2::frameset &frameset) {
@@ -305,6 +343,12 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, rgb_info.c_str());
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, depth_info.c_str());
     }
+
+    if (config.output_raw) {
+      std::string raw_info = "Recording to " + this->raw_filename;
+      ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, raw_info.c_str());
+    }
+
   }
   else{
     if (config.output_rosbag && curr_device.as<rs2::recorder>()) {
@@ -317,6 +361,11 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
       std::string depth_info = "Pausing to " + this->depth_seq;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, rgb_info.c_str());
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, depth_info.c_str());
+    }
+
+    if (config.output_raw) {
+      std::string raw_info = "Pausing " + this->raw_filename;
+      ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, raw_info.c_str());
     }
   }
 }
@@ -578,8 +627,13 @@ int main(int argc, char * argv[]) try
       //display status
       logger_ptr->show_recording_info(config, curr_device);
 
-      if (logger_ptr->is_recording_paused())
-        logger_ptr->record_frames(frameset);
+      if (logger_ptr->is_recording_paused()){
+        if (config.output_sequences)
+          logger_ptr->record_frames(frameset);
+
+        if (config.output_raw)
+          logger_ptr->record_raw_(frameset);
+      }
 
       // Pause the playback if button is clicked
       if (ImGui::Button("pause\nrecord"))
