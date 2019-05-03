@@ -32,7 +32,7 @@ add_subdirectory(thirdparty/imgui)
 include_directories(thirdparty/imgui)
 link_libraries(imgui)
 
-add_executable(rs-logger rs-logger.cpp)
+add_executable(rs-logger rs-logger.cpp raw.cpp)
 target_link_libraries(rs-logger  ${OPENGL_LIBRARIES}  glfw ${realsense_INCLUDE_DIR} ${REALSENSE2_FOUND}
           ${OpenCV_LIBS})
 include_directories(rs-logger  ${realsense_INCLUDE_DIR} thirdparty/imgui)
