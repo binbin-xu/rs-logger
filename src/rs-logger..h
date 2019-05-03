@@ -20,8 +20,8 @@ class RSLogger{
  public:
   RSLogger();
   std::string rosbag;
-  std::string rgb_seq;
-  std::string depth_seq;
+  int curr_frame_num = 0;
+
   void record_frames(const rs2::frameset& frameset);
   void record_raw_(const rs2::frameset& frameset);
 
@@ -42,7 +42,6 @@ class RSLogger{
 
   int width_;
   int height_;
-  int curr_frame_num_ = 0;
 
 //  intrinsics
   float resX, resY, fx, fy, cx, cy, d0, d1, d2, d3, d4;
@@ -51,7 +50,9 @@ class RSLogger{
   std::string rgbFolder_;
   std::string depthFolder_;
 
-  std::string raw_filename;
+  std::string rgb_seq_;
+  std::string depth_seq_;
+  std::string raw_filename_;
 
   void init_recording_(const ParamConfig &config);
   void record_depth_(const rs2::depth_frame& depth);

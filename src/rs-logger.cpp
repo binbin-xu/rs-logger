@@ -152,10 +152,11 @@ void RSLogger::init_recording_(const ParamConfig &config){
     make_new_folder(this->depthFolder_);
   }
 
-  this->curr_frame_num_= 0;
   if (config.output_raw){
-    this->raw_filename = this->logFolder_ + curr_time + ".raw";
+    this->raw_filename_ = this->logFolder_ + curr_time + ".raw";
   }
+
+  this->curr_frame_num = 0;
 }
 
 void render_slider(rect location, std::vector<rs2::sensor>& sensors, ParamConfig& config)
@@ -241,7 +242,7 @@ void RSLogger::record_raw_(const rs2::frameset &frameset) {
 //  TODO: check if the distance is represented in z-distance or eucliadn distance
   Raw::depthToUshort(depthImage, depthRaw, this->cx, this->cy, this->fx, this->fy, "z");
 
-  FILE* pFile = fopen(this->raw_filename.c_str(), "ab");
+  FILE* pFile = fopen(this->raw_filename_.c_str(), "ab");
 
   // recording to binraw
   fwrite(&(inputSize), sizeof(inputSize), 1, pFile);
@@ -263,8 +264,6 @@ void RSLogger::record_frames(const rs2::frameset &frameset) {
   record_rgb_(color);
   record_depth_(depth);
 
-  //increament
-  this->curr_frame_num_++;
 }
 void RSLogger::record_rgb_(const rs2::video_frame &color) {
   // Query frame size (width and height)
@@ -277,9 +276,9 @@ void RSLogger::record_rgb_(const rs2::video_frame &color) {
 
   std::stringstream out_sqs;
   out_sqs << this->rgbFolder_;
-  out_sqs << std::setfill('0') << std::setw(5) << this->curr_frame_num_ << ".png";
-  this->rgb_seq = out_sqs.str();
-  cv::imwrite(this->rgb_seq, colorImage);
+  out_sqs << std::setfill('0') << std::setw(5) << this->curr_frame_num << ".png";
+  this->rgb_seq_ = out_sqs.str();
+  cv::imwrite(this->rgb_seq_, colorImage);
 }
 
 void RSLogger::record_depth_(const rs2::depth_frame& depth) {
@@ -292,9 +291,9 @@ void RSLogger::record_depth_(const rs2::depth_frame& depth) {
 
   std::stringstream out_sqs;
   out_sqs << this->depthFolder_;
-  out_sqs << std::setfill('0') << std::setw(5) << this->curr_frame_num_ << ".png";
-  this->depth_seq = out_sqs.str();
-  cv::imwrite(this->depth_seq, depthImage);
+  out_sqs << std::setfill('0') << std::setw(5) << this->curr_frame_num << ".png";
+  this->depth_seq_ = out_sqs.str();
+  cv::imwrite(this->depth_seq_, depthImage);
 }
 
 void RSLogger::start(const ParamConfig& config) {
@@ -302,8 +301,7 @@ void RSLogger::start(const ParamConfig& config) {
   if (!this->recording){
     this->init_recording_(config);
     std::cout<<"initialize folders"<<std::endl;
-    if (config.output_sequences)
-      this->record_intrinsics_();
+    this->record_intrinsics_();
   }
   //if resume: currently recording should be true -> no special thing needs to be done
   this->recording = true;
@@ -338,14 +336,14 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
 
     //record raw sequences
     if (config.output_sequences) {
-      std::string rgb_info = "Recording to " + this->rgb_seq;
-      std::string depth_info = "Recording to " + this->depth_seq;
+      std::string rgb_info = "Recording to " + this->rgb_seq_;
+      std::string depth_info = "Recording to " + this->depth_seq_;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, rgb_info.c_str());
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, depth_info.c_str());
     }
 
     if (config.output_raw) {
-      std::string raw_info = "Recording to " + this->raw_filename;
+      std::string raw_info = "Recording to " + this->raw_filename_;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, raw_info.c_str());
     }
 
@@ -357,14 +355,14 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
     }
 
     if (config.output_sequences) {
-      std::string rgb_info = "Pausing " + this->rgb_seq;
-      std::string depth_info = "Pausing to " + this->depth_seq;
+      std::string rgb_info = "Pausing " + this->rgb_seq_;
+      std::string depth_info = "Pausing to " + this->depth_seq_;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, rgb_info.c_str());
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, depth_info.c_str());
     }
 
     if (config.output_raw) {
-      std::string raw_info = "Pausing " + this->raw_filename;
+      std::string raw_info = "Pausing " + this->raw_filename_;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, raw_info.c_str());
     }
   }
@@ -596,7 +594,7 @@ int main(int argc, char * argv[]) try
     // if record bottom is pressed
     if (ImGui::Button("record")){
       //re-start or resume, depending on states of the recorder
-        logger_ptr->start(config);
+      logger_ptr->start(config);
 
       //record ros bag
       if(config.output_rosbag){
@@ -633,6 +631,9 @@ int main(int argc, char * argv[]) try
 
         if (config.output_raw)
           logger_ptr->record_raw_(frameset);
+
+        //increament
+        logger_ptr->curr_frame_num++;
       }
 
       // Pause the playback if button is clicked
