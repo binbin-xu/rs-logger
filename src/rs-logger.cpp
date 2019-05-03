@@ -1,5 +1,6 @@
-// License: Apache 2.0. See LICENSE file in root directory.
-// Copyright(c) 2019 Intel Corporation. All Rights Reserved.
+//
+// Created by binbin on 17/04/19.
+//
 
 #include <librealsense2/rs.hpp>
 #include "rs-logger..h"
