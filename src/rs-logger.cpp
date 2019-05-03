@@ -330,7 +330,7 @@ bool RSLogger::is_recording_paused() {
 void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device &curr_device) {
   if(!this->recording_pause){
     if (config.output_rosbag && curr_device.as<rs2::recorder>()) {
-      std::string rosbag_info = "Recording to " + this->rosbag;
+      std::string rosbag_info = "Recording # "+ std::to_string(this->curr_frame_num) + " to " + this->rosbag;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, rosbag_info.c_str());
     }
 
@@ -343,7 +343,7 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
     }
 
     if (config.output_raw) {
-      std::string raw_info = "Recording to " + this->raw_filename_;
+      std::string raw_info = "Recording #" + std::to_string(this->curr_frame_num) + " to " + this->raw_filename_;
       ImGui::TextColored({255 / 255.f, 64 / 255.f, 54 / 255.f, 1}, raw_info.c_str());
     }
 
