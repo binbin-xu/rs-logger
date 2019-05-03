@@ -317,7 +317,7 @@ void RSLogger::show_recording_info(const ParamConfig& config, const rs2::device 
   }
 }
 
-void record_intrinsics_(const rs2::stream_profile& stream) {
+void RSLogger::get_intrinsics(const rs2::stream_profile &stream) {
   // A sensor's stream (rs2::stream_profile) is in general a stream of data with no specific type.
   // For video streams (streams of images), the sensor that produces the data has a lens and thus has properties such
   //  as a focal point, distortion, and principal point.
@@ -328,18 +328,31 @@ void record_intrinsics_(const rs2::stream_profile& stream) {
     {
       //If the stream is indeed a video stream, we can now simply call get_intrinsics()
       rs2_intrinsics intrinsics = video_stream.get_intrinsics();
-
       auto resolution = std::make_pair(intrinsics.width, intrinsics.height);
       auto principal_point = std::make_pair(intrinsics.ppx, intrinsics.ppy);
       auto focal_length = std::make_pair(intrinsics.fx, intrinsics.fy);
       rs2_distortion model = intrinsics.model;
 
-      std::cout << "Camera Resolution       : " << resolution.first << ", " << resolution.second << std::endl;
-      std::cout << "Principal Point         : " << principal_point.first << ", " << principal_point.second << std::endl;
-      std::cout << "Focal Length            : " << focal_length.first << ", " << focal_length.second << std::endl;
+      this->resX = resolution.first;
+      this->resY = resolution.second;
+      this->fx = focal_length.first;
+      this->fy = focal_length.second;
+      this->cx = principal_point.first;
+      this->cy = principal_point.second;
+      this->d0 = intrinsics.coeffs[0];
+      this->d1 = intrinsics.coeffs[1];
+      this->d2 = intrinsics.coeffs[2];
+      this->d3 = intrinsics.coeffs[3];
+      this->d4 = intrinsics.coeffs[4];
+
+      std::cout << "Camera Resolution       : " << this->resX << ", " << this->resY << std::endl;
+      std::cout << "Principal Point         : " << this->cx << ", " << this->cy << std::endl;
+      std::cout << "Focal Length            : " << this->fx << ", " << this->fy << std::endl;
       std::cout << "Distortion Model        : " << model << std::endl;
-      std::cout << "Distortion Coefficients : [" << intrinsics.coeffs[0] << "," << intrinsics.coeffs[1] << "," <<
-                intrinsics.coeffs[2] << "," << intrinsics.coeffs[3] << "," << intrinsics.coeffs[4] << "]" << std::endl;
+      std::cout << "Distortion Coefficients : [" << this->d0 << "," << this->d1 << "," <<
+                this->d2 << "," << this->d3 << "," << this->d4 << "]" << std::endl;
+
+
     }
     catch (const std::exception& e)
     {
@@ -418,7 +431,7 @@ int main(int argc, char * argv[]) try
   config.cfg.enable_stream(RS2_STREAM_COLOR, config.width, config.height);
   auto rs_profile = pipe_ptr->start(config.cfg);
   auto const steam = pipe_ptr->get_active_profile().get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
-  record_intrinsics_(steam);
+  logger_ptr->get_intrinsics(steam);
   // Initialize a shared pointer to a device with the current device on the pipeline
   auto curr_device = rs_profile.get_device();
 

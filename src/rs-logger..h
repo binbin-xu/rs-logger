@@ -31,6 +31,7 @@ class RSLogger{
   bool is_recording();
   bool is_recording_paused();
   void show_recording_info(const ParamConfig& config, const rs2::device &curr_device);
+  void get_intrinsics(const rs2::stream_profile &stream);
 
  private:
 
@@ -41,6 +42,9 @@ class RSLogger{
   int width_;
   int height_;
   int curr_frame_num_ = 0;
+
+//  intrinsics
+  float resX, resY, fx, fy, cx, cy, d0, d1, d2, d3, d4;
 
   std::string logFolder_;
   std::string rgbFolder_;
