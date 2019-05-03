@@ -7,7 +7,7 @@ Currently supported output format:
 
 - [x] Raw RGB-D sequences
 - [ ] Raw RGB-D with timestamps in TUM RGB-D format
-- [ ] raw: SLAMBench 1.0 file format, used also in Supereight and some other SLAM method
+- [x] raw: SLAMBench 1.0 file format, used also in Supereight and some other SLAM method
 - [ ] Klg: used in ElasticFusion and some other SLAM methods
 
 Currently tested in Ubuntu 16.04 only. Feel free to try it out in other platforms
