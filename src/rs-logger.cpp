@@ -141,7 +141,7 @@ void RSLogger::init_recording_(const ParamConfig &config){
   make_new_folder(this->logFolder_);
 
   if (config.output_rosbag){
-    std::string rosbag = this->logFolder_ + curr_time + ".bag";
+    this->rosbag = this->logFolder_ + curr_time + ".bag";
   }
 
   if (config.output_sequences){
@@ -584,7 +584,7 @@ int main(int argc, char * argv[]) try
       // Pause the playback if button is clicked
       if (ImGui::Button("pause\nrecord"))
       {
-        if (config.output_rosbag && curr_device.as<rs2::recorder>()){
+        if (config.output_rosbag){
           curr_device.as<rs2::recorder>().pause();
         }
         logger_ptr->pause();
@@ -593,10 +593,10 @@ int main(int argc, char * argv[]) try
 
       if (ImGui::Button(" stop\nrecord"))
       {
-        if (config.output_rosbag && curr_device.as<rs2::recorder>()){
+        if (config.output_rosbag){
           pipe_ptr->stop(); // Stop the pipeline that holds the file and the recorder
           pipe_ptr = std::make_shared<rs2::pipeline>(); //Reset the shared pointer with a new pipeline
-          pipe_ptr->start(config.cfg); // Resume streaming with default configuration
+          pipe_ptr->start(); // Resume streaming with default configuration
           curr_device = pipe_ptr->get_active_profile().get_device();
         }
 
