@@ -24,3 +24,16 @@ Supported features:
 - [ ] add compressed images
 - [x] Add raw support 
 - [ ] Add KLG support
+
+
+
+Dependency:
+
+* GLEW
+
+  ```
+  apt-get install libglew-dev
+  ```
+
+  
+
