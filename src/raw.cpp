@@ -13,9 +13,9 @@ bool Raw::imageToUchar3(const cv::Mat& mat, Raw::uchar3* image){
 
   for(int i = 0; i < nRows; ++i)
     for(int j = 0; j < nCols; ++j) {
-      unsigned char b = pixelPtr[i*mat.cols*cn + j*cn + 0]; // B
+      unsigned char r = pixelPtr[i*mat.cols*cn + j*cn + 0]; // B
       unsigned char g = pixelPtr[i*mat.cols*cn + j*cn + 1]; // G
-      unsigned char r = pixelPtr[i*mat.cols*cn + j*cn + 2]; // R
+      unsigned char b = pixelPtr[i*mat.cols*cn + j*cn + 2]; // R
       image[nCols*i+j] = Raw::make_uchar3(r,g,b);
     }
   return true;
